@@ -8,10 +8,11 @@
  * dijaga oleh Firestore Security Rules (lihat firestore.rules), bukan oleh config ini.
  */
 export const firebaseConfig = {
-  apiKey: "ISI_API_KEY",
-  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
-  projectId: "ISI_PROJECT_ID",
-  storageBucket: "ISI_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "ISI_SENDER_ID",
-  appId: "ISI_APP_ID"
+  apiKey: "AIzaSyBa_DXV7GIOc87I5FhdZUSZg4tLx8h-FJU",
+  authDomain: "leaderboard-pmr.firebaseapp.com",
+  projectId: "leaderboard-pmr",
+  storageBucket: "leaderboard-pmr.firebasestorage.app",
+  messagingSenderId: "95970869801",
+  appId: "1:95970869801:web:de7109c4dab88649e41238",
+  measurementId: "G-JNV427V1CP"
 };
