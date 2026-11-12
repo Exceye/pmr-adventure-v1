@@ -10,12 +10,12 @@
 `index.html` memuat `css/style.css` dan menjalankan `js/game.js` sebagai ES module.
 `js/game.js` mengimpor `showLeaderboard()` dari `js/leaderboard.js`.
 
-## Catatan leaderboard
-Leaderboard saat ini menggunakan `localStorage`, sehingga data hanya tersimpan pada browser/perangkat yang sama. Ini adalah fondasi agar UI dan logika leaderboard sudah terpisah dari game. Agar leaderboard online bisa dipakai bersama oleh semua pemain, sambungkan `API_URL` di `js/leaderboard.js` ke backend (misalnya Firebase) dan sesuaikan endpoint GET/POST.
-
-Game sumber belum memiliki sistem kuis/skor yang benar-benar berjalan. Karena itu, modul leaderboard belum otomatis menerima skor dari kuis. Setelah sistem kuis ditambahkan, panggil:
-`submitScore({ name: namaPemain, score: totalPoin })`
-dari `js/game.js` dan impor fungsi tersebut dari `leaderboard.js`.
+## Leaderboard (Firebase Firestore)
+- `js/firebase-config.js` — isi dengan config Web App dari Firebase Console.
+- `js/leaderboard.js` — `submitScore()`, `getTopScores()`, `showLeaderboard()`.
+- `firestore.rules` — aturan keamanan; tempel di Firestore > Rules lalu Publish.
+- Skor otomatis dikirim saat keenam rumah selesai dijawab. Satu dokumen per nama pemain, hanya skor tertinggi yang disimpan.
+- Jika `firebase-config.js` belum diisi, game memakai `localStorage` (hanya lokal).
 
 Jalankan melalui local server (misalnya Live Server), bukan membuka file HTML langsung, agar JavaScript module berjalan konsisten.
 
