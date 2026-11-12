@@ -2,15 +2,24 @@
 <html lang="id"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PMR Adventure</title>
-<link rel="stylesheet" href="CSS/style.css"></head><body><canvas id="c"></canvas>
-<div id="hud"><div id="nm"></div><div id="loc"></div></div>
+<link rel="stylesheet" href="css/style.css"></head><body><canvas id="c"></canvas>
+<div id="hud"><div id="nm"></div><div id="loc"></div><div id="score">⭐ 0 poin</div><div id="progress">🏠 0/6 rumah selesai</div></div>
 <button id="fs" title="Layar penuh">⛶</button><div id="ts"></div>
 <div id="jb"></div><div id="jk"></div><div id="er"></div>
 <button id="act">Aksi</button><div id="dlg"></div>
+<div id="treasureReveal" aria-live="polite">
+  <div class="treasure-card">
+    <img id="treasureJoke" src="jokes.png" alt="Jumacare">
+    <div id="treasureMessage" hidden>
+      <p>Pesan dari developer 💌<br>Maaf ya kalau game-nya belum terlalu bagus. Pengerjaannya mendadak, jadi belum semuanya bisa maksimal. Terima kasih sudah mau main dan memahami! ❤️</p>
+      <button id="treasureContinue" type="button">Lanjutkan</button>
+    </div>
+  </div>
+</div>
 <div id="st"><h1>PMR <span>✚</span> Adventure</h1><p>Jelajahi kampung, bantu warga, kumpulkan poin!</p>
 <input id="ni" maxlength="14" placeholder="Masukkan namamu" autocomplete="off">
 <div id="gs"><button class="g on" data-g="m"><img id="pm" alt=""><span>Laki-laki</span></button><button class="g" data-g="f"><img id="pf" alt=""><span>Perempuan</span></button></div>
 <button id="go">MAIN</button>
 <button id="lb">🏆 Leaderboard</button></div>
-<div id="lbp"><div class="box"><h2>🏆 Leaderboard</h2><div id="lbl"></div><p>Skor muncul setelah kuis 5 soal di 6 rumah dimainkan (1 soal = 15 poin). Segera hadir!</p><button id="lbx">Tutup</button></div></div>
+<div id="lbp"><div class="box"><h2>🏆 Leaderboard</h2><div id="lbl"></div><p>Leaderboard online akan dihubungkan ke Firestore setelah konfigurasi Firebase tersedia.</p><button id="lbx">Tutup</button></div></div>
 <script type="module" src="js/game.js"></script></body></html>

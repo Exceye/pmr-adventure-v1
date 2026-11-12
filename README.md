@@ -18,3 +18,11 @@ Game sumber belum memiliki sistem kuis/skor yang benar-benar berjalan. Karena it
 dari `js/game.js` dan impor fungsi tersebut dari `leaderboard.js`.
 
 Jalankan melalui local server (misalnya Live Server), bukan membuka file HTML langsung, agar JavaScript module berjalan konsisten.
+
+
+## Sistem kuis rumah
+- Enam rumah berisi enam pertanyaan yang diacak setiap permainan dimulai.
+- Tiga soal esai dan tiga pilihan ganda; jawaban benar bernilai 15 poin.
+- Setiap rumah hanya dapat diselesaikan sekali. Rumah yang sudah dijawab tidak dapat dimasuki lagi.
+- Mansion terkunci sampai keenam pertanyaan selesai dijawab.
+- Skor maksimal adalah 90 poin.
