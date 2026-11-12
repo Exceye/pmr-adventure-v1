@@ -1,4 +1,4 @@
-import { showLeaderboard } from "./leaderboard.js";
+import { showLeaderboard, submitScore } from "./leaderboard.js";
 
 onerror=(m,s,l)=>{const e=document.getElementById('er');e.style.display='block';e.textContent='Error: '+m+' (baris '+l+')'};
 const $=i=>document.getElementById(i),cv=$('c'),g=cv.getContext('2d'),buf=document.createElement('canvas'),b=buf.getContext('2d');
@@ -212,7 +212,17 @@ function startQuiz(i){
   answered[i]=true;score+=earned;updateHud();
   const all=completedCount()===6;
   const heading=q.type==='essay'?(earned===15?'🎉 Jawaban lengkap!':earned>0?'👍 Sebagian jawaban benar!':'Belum tepat, tetap semangat!'):(ok?'🎉 Jawaban benar!':'Belum tepat, tetap semangat!');
-  showDialog(`<b>${heading}</b>${feedback}<p>Skor: <strong>${score} poin</strong> · ${completedCount()}/6 rumah selesai</p>${all?'<p>🔓 Semua pertanyaan selesai! Mansion sekarang terbuka!</p>':''}<p><button type="button" data-close>Lanjutkan</button></p>`);
+  showDialog(`<b>${heading}</b>${feedback}<p>Skor: <strong>${score} poin</strong> · ${completedCount()}/6 rumah selesai</p>${all?'<p>🔓 Semua pertanyaan selesai! Mansion sekarang terbuka!</p><p id="lbStatus">⏳ Menyimpan skor ke leaderboard...</p>':''}<p><button type="button" data-close>Lanjutkan</button></p>`);
+  if(all){
+   // Semua rumah selesai: kirim skor akhir ke leaderboard.
+   submitScore({name:$('nm').dataset.n,score}).then(r=>{
+    const el=$('lbStatus');if(!el)return;
+    el.textContent=r.saved?'🏆 Skormu tersimpan di leaderboard!':`🏆 Skor terbaikmu tetap ${r.best} poin di leaderboard.`;
+   }).catch(err=>{
+    console.error(err);
+    const el=$('lbStatus');if(el)el.textContent='⚠️ Skor gagal tersimpan. Periksa koneksi internet.';
+   });
+  }
  };
 }
 function act(){
