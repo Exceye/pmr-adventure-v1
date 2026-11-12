@@ -148,11 +148,36 @@ function mansionRoom(){const w=448,h=288,L=draw(w,h,()=>{floor(w,h,40,'#c99a5b',
    if(opened)for(let k=0;k<6;k++){const an=t/500+k*1.05,sx=Math.round(x+Math.cos(an)*(16+k*2)),sy=Math.round(y-18+Math.sin(an*1.3)*(12+k)),on=Math.floor(t/150+k)%2;B('#fff6a0',sx,sy,2,2);if(on){B('#fff6a0',sx-1,sy,4,1);B('#fff6a0',sx,sy-1,2,4)}}}}]}}
 /* ---------- game ---------- */
 const P={x:384,y:300,d:0,st:0};
-let lastDoor=null,sc=OUT,gender='m',keys={},joy={x:0,y:0},dlg=false,cool=0,opened=false,playing=false,near=null,fa=0,pend=null,last=0;
+const QUESTIONS=[
+ {type:'essay',q:'Apa manfaat wedang bagi tubuh?',answer:'Menghangatkan tubuh dan memberikan rasa nyaman.',groups:[['menghangatkan'],['tubuh'],['nyaman']]},
+ {type:'essay',q:'Sebutkan 3 ciri-ciri tanaman sereh!',answer:'Daunnya panjang dan runcing, batangnya putih kehijauan, serta memiliki aroma khas seperti lemon.',groups:[['daun','daunnya'],['batang'],['aroma','bau','lemon']]},
+ {type:'essay',q:'Apa saja kandungan yang terdapat pada daun salam?',answer:'Minyak atsiri, tanin, flavonoid, kalsium, dan zat besi.',groups:[['minyak atsiri','minyak'],['tanin','flavonoid'],['kalsium','zat besi','besi']] },
+ {type:'mc',q:'Apa ciri khas tanaman sereh?',options:['Memiliki daun lebar dan bulat','Memiliki aroma segar seperti lemon','Memilih batang berwarna merah','Memiliki bunga berwarna ungu'],correct:1},
+ {type:'mc',q:'Apa nama ilmiah dari daun salam?',options:['Syzygium polyanthum','Cymbopogon citratus','Aloe vera','Piper betle'],correct:0},
+ {type:'mc',q:'Kandungan utama yang memberikan aroma khas seperti lemon pada sereh adalah ....',options:['Sitral','Gingerol','Kurkumin','Saponin'],correct:0}
+];
+const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x};
+let houseQuestions=shuffle(QUESTIONS),answered=Array(6).fill(false),score=0,activeHouse=-1;
+let lastDoor=null,sc=OUT,gender='m',keys={},joy={x:0,y:0},dlg=false,cool=0,opened=false,playing=false,near=null,fa=0,pend=null,last=0,lastLockToast=0,treasureShown=false;
 const rooms=[],fb=(x,y)=>R(x-5,y-6,10,6);
+function completedCount(){return answered.filter(Boolean).length}
+function updateHud(){if($('score'))$('score').textContent='⭐ '+score+' poin';if($('progress'))$('progress').textContent='🏠 '+completedCount()+'/6 rumah selesai'}
+function showDialog(html){$('dlg').innerHTML=html;$('dlg').style.display='block';dlg=true;$('act').style.display='none'}
+function closeDialog(){dlg=false;$('dlg').style.display='none'}
+function normalized(v){return v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()}
+function checkEssay(q,answer){
+ const a=normalized(answer);
+ const words=new Set(a.split(' '));
+ const matched=q.groups.filter(group=>group.some(k=>{
+  const key=normalized(k);
+  return key.includes(' ')?a.includes(key):words.has(key);
+ })).length;
+ return {matched,total:q.groups.length,points:matched*5};
+}
+
 function setScene(id,x,y){sc=id==='out'?OUT:(rooms[id]=rooms[id]||(id==6?mansionRoom():houseRoom(id)));
  if(x==null){x=sc.spawn[0];y=sc.spawn[1]}P.x=x;P.y=y;cool=30;
- $('loc').textContent=id==='out'?'📍 Kampung Harapan':id==6?'📍 Mansion Pusat':'📍 Rumah '+(id+1)+' · '+NPCS[id].n}
+ $('loc').textContent=id==='out'?'📍 Kampung Harapan':id==6?'📍 Mansion Pusat':'📍 Rumah '+(id+1)+' · '+NPCS[id].n;sc.id=id}
 function mv(dx,dy){const bx=sc.bx;let nx=P.x+dx;if(nx>bx[0]&&nx<bx[1]&&!sc.solids.some(r=>hit(fb(nx,P.y),r)))P.x=nx;
  let ny=P.y+dy;if(ny>bx[2]&&ny<bx[3]&&!sc.solids.some(r=>hit(fb(P.x,ny),r)))P.y=ny}
 function step(dt){
@@ -164,15 +189,63 @@ function step(dt){
  const m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m}
  if(m>.12){const v=62*dt;mv(dx*v,dy*v);P.st+=dt*8;{const ax=Math.abs(dx),ay=Math.abs(dy);if(P.d==1||P.d==3){if(ay>ax*1.3)P.d=dy>0?0:2;else if(ax>.25)P.d=dx>0?1:3}else{if(ax>ay*1.3)P.d=dx>0?1:3;else if(ay>.25)P.d=dy>0?0:2}}}else P.st=0;
  if(cool>0){cool--;return}
- for(const d of sc.doors)if(hit(fb(P.x,P.y),d.r)){pend=d;break}}
+ for(const d of sc.doors)if(hit(fb(P.x,P.y),d.r)){
+  if(sc===OUT&&d.to===6&&completedCount()<6){const now=Date.now();if(now-lastLockToast>2200){toast('Mansion masih terkunci! Selesaikan semua 6 pertanyaan di rumah.');lastLockToast=now}break}
+  if(sc===OUT&&typeof d.to==='number'&&d.to<6&&answered[d.to]){const now=Date.now();if(now-lastLockToast>2200){toast('Rumah ini sudah selesai kamu jawab. Cari rumah lain!');lastLockToast=now}break}
+  pend=d;break}}
+function startQuiz(i){
+ if(answered[i]){showDialog(`<b>Rumah sudah selesai</b>Kamu sudah menjawab pertanyaan di rumah ini. Silakan cari rumah lain.<p><button type="button" data-close>Tutup</button></p>`);return}
+ activeHouse=i;const q=houseQuestions[i];let body='';
+ if(q.type==='essay')body=`<label for="essayAnswer">Tulis jawabanmu:</label><textarea id="essayAnswer" rows="3" placeholder="Ketik jawaban di sini..." required></textarea>`;
+ else body=`<div class="quiz-options">${q.options.map((v,n)=>`<label><input type="radio" name="mcAnswer" value="${n}"> ${String.fromCharCode(65+n)}. ${v}</label>`).join('')}</div>`;
+ showDialog(`<b>📚 Pertanyaan Rumah ${i+1} · ${q.type==='essay'?'Esai':'Pilihan Ganda'}</b><p>${q.q}</p><form id="quizForm">${body}<p><button type="submit">Kirim Jawaban</button></p></form><small>${q.type==='essay'?'Esai dinilai bertahap: setiap poin jawaban yang cocok bernilai 5 poin (maksimal 15).':'Jawaban benar: +15 poin.'} Setiap rumah hanya bisa dijawab satu kali.</small>`);
+ const form=$('quizForm');form.onsubmit=e=>{e.preventDefault();let ok=false,earned=0,feedback='';
+  if(q.type==='essay'){
+   const v=$('essayAnswer').value.trim();if(!v){$('essayAnswer').focus();return}
+   const result=checkEssay(q,v);earned=result.points;ok=earned===15;
+   feedback=`<p>Bagian jawaban yang cocok: <strong>${result.matched} dari ${result.total}</strong>.</p><p>Kamu mendapatkan <strong>${earned} poin</strong> dari maksimal 15 poin.</p><p>Contoh jawaban lengkap: ${q.answer}</p>`;
+  } else {
+   const v=form.querySelector('input[name=mcAnswer]:checked');if(!v){toast('Pilih salah satu jawaban dulu.');return}
+   ok=Number(v.value)===q.correct;earned=ok?15:0;
+   feedback=`<p>${ok?'Kamu mendapatkan 15 poin.':`Jawaban yang benar: ${String.fromCharCode(65+q.correct)}. ${q.options[q.correct]}`}</p>`;
+  }
+  answered[i]=true;score+=earned;updateHud();
+  const all=completedCount()===6;
+  const heading=q.type==='essay'?(earned===15?'🎉 Jawaban lengkap!':earned>0?'👍 Sebagian jawaban benar!':'Belum tepat, tetap semangat!'):(ok?'🎉 Jawaban benar!':'Belum tepat, tetap semangat!');
+  showDialog(`<b>${heading}</b>${feedback}<p>Skor: <strong>${score} poin</strong> · ${completedCount()}/6 rumah selesai</p>${all?'<p>🔓 Semua pertanyaan selesai! Mansion sekarang terbuka!</p>':''}<p><button type="button" data-close>Lanjutkan</button></p>`);
+ };
+}
 function act(){
- if(dlg){dlg=false;$('dlg').style.display='none';return}
- if(!near||!playing)return;let h;
- if(near=='npc')h=`<b>${sc.n.n}</b>Halo, ${$('nm').dataset.n}! Aku punya 5 pertanyaan seputar PMR untukmu. Setiap jawaban benar bernilai 15 poin. <small>(Kuis hadir di tahap berikutnya)</small>`;
- else{opened=true;h=`<b>🎉 Easter Egg Ditemukan!</b>Peti besar terbuka! Isinya: tandu emas, kotak P3K legendaris, dan sebuah surat: “Terima kasih sudah menjadi petugas PMR sejati. Siap menolong, tanpa pamrih!” ✚<small>Ketuk untuk menutup</small>`}
- $('dlg').innerHTML=h;$('dlg').style.display='block';dlg=true;$('act').style.display='none'}
-$('dlg').onclick=act;$('act').onclick=act;
-addEventListener('keydown',e=>{keys[e.key]=true;if(['e',' ','Enter'].includes(e.key)&&playing)act()});
+ if(dlg){closeDialog();return}
+ if(!near||!playing)return;
+ if(near==='npc'){startQuiz(Number(sc.id));return}
+ if(near==='chest'){
+  if(completedCount()<6){showDialog('<b>🔒 Peti masih terkunci</b>Selesaikan semua 6 pertanyaan di enam rumah terlebih dahulu.<p><button type="button" data-close>Tutup</button></p>');return}
+  opened=true;
+  if(!treasureShown){
+   treasureShown=true;
+   const reveal=$('treasureReveal');
+   const message=$('treasureMessage');
+   if(reveal&&message){
+    message.hidden=true;
+    reveal.classList.remove('show-message','show-jumacare');
+    reveal.style.display='flex';
+    void reveal.offsetWidth;
+    reveal.classList.add('show-jumacare');
+    // Beri waktu agar gambar Jumacare dan animasi kejutannya terlihat dulu.
+    setTimeout(()=>{
+     reveal.classList.remove('show-jumacare');
+     message.hidden=false;
+     reveal.classList.add('show-message');
+    },1900);
+   }
+  }
+  toast('🎉 Peti terbuka! Ada pesan rahasia dari developer!');
+ }
+}
+$('dlg').onclick=e=>{if(e.target.closest('[data-close]'))closeDialog()};$('act').onclick=act;
+$('treasureContinue').onclick=()=>{const reveal=$('treasureReveal');if(reveal){reveal.classList.remove('show-message','show-jumacare');reveal.style.display='none'}};
+addEventListener('keydown',e=>{keys[e.key]=true;if(!dlg&&!['INPUT','TEXTAREA','BUTTON'].includes(e.target.tagName)&&['e',' ','Enter'].includes(e.key)&&playing)act()});
 addEventListener('keyup',e=>keys[e.key]=false);
 let jp=null,jo={x:0,y:0};const jb=$('jb'),jk=$('jk');
 cv.addEventListener('pointerdown',e=>{if(jp!==null||!playing||dlg)return;jp=e.pointerId;jo={x:e.clientX,y:e.clientY};
@@ -196,7 +269,7 @@ document.querySelectorAll('.g').forEach(x=>x.onclick=()=>{document.querySelector
 try{$('ni').value=localStorage.getItem('pmrName')||'';const sg=localStorage.getItem('pmrG');if(sg)document.querySelector(`.g[data-g=${sg}]`).click()}catch(e){}
 $('go').onclick=()=>{const n=$('ni').value.trim();if(!n){$('ni').focus();$('ni').placeholder='Nama wajib diisi';return}
  try{localStorage.setItem('pmrName',n);localStorage.setItem('pmrG',gender)}catch(e){}
- $('nm').textContent='🩺 Petugas '+n;$('nm').dataset.n=n;$('st').style.display='none';$('hud').style.display='block';setScene('out',384,300);playing=true};
+ $('nm').textContent='🩺 Petugas '+n;$('nm').dataset.n=n;$('st').style.display='none';$('hud').style.display='block';houseQuestions=shuffle(QUESTIONS);answered=Array(6).fill(false);score=0;opened=false;treasureShown=false;updateHud();setScene('out',384,300);playing=true};
 $('lb').onclick=async()=>{await showLeaderboard($);};
 $('lbx').onclick=()=>{$('lbp').style.display='none';};
 $('pm').src=SP.m[0][0].toDataURL();$('pf').src=SP.f[0][0].toDataURL();
